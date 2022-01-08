@@ -1,0 +1,10 @@
+{
+    "private": true,
+    "scripts": {
+        "dev": "npm run development",
+        "prod": "npm run production"
+    },
+    "devDependencies": {
+        "axios": "^0.21"
+    }
+}
