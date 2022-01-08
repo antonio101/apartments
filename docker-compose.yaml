@@ -1,0 +1,100 @@
+version: '3.7'
+services:
+
+    appdb:
+      container_name: mysql
+      image: mysql:5.7
+      restart: unless-stopped
+      environment:
+        MYSQL_DATABASE: ${DB_DATABASE}
+        MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+        MYSQL_PASSWORD: ${DB_PASSWORD}
+      ports:
+        - 3308:3306
+      expose:
+        - 3306
+      networks:
+        - db
+
+    phpmyadmin:
+      container_name: phpmyadmin
+      image: phpmyadmin/phpmyadmin
+      restart: unless-stopped
+      environment:
+        PMA_HOST: appdb
+        MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      depends_on:
+        - appdb
+      ports:
+        - 8443:80
+      networks:
+        - db
+    redis:
+      container_name: redis
+      image: redis:6.2-alpine
+      restart: unless-stopped
+      ports:
+        - 6379:6379
+      #command: redis-server --save 60 1 --requirepass Antonio123 --loglevel 
+      networks:
+        - app-network
+    smtp:
+      container_name: smtp
+      image: namshi/smtp
+      restart: always
+      environment:
+        - MAILNAME
+        - SMARTHOST_USER
+        - SMARTHOST_PASSWORD
+      volumes:
+        - /etc/postfix/main.cf:/etc/postfix/main.cf
+      ports:
+        - 25:25
+      networks:
+        - app-network
+
+    backend:
+      container_name: backend
+      build:
+        context: ./api/
+      restart: unless-stopped
+      environment:
+        MYSQL_DATABASE: ${DB_DATABASE}
+        MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+        MYSQL_PASSWORD: ${DB_PASSWORD}
+        WAIT_HOSTS: appdb:3306
+        WAIT_HOSTS_TIMEOUT: 300
+        WAIT_SLEEP_INTERVAL: 30
+        WAIT_HOST_CONNECT_TIMEOUT: 30
+      command: sh -c "/wait && /run.sh"
+      working_dir: /var/www
+      volumes:
+        - ./api:/var/www
+      ports:
+        - "8000:8000"
+      networks:
+        - app-network
+        - db
+      depends_on:
+        - redis
+        - smtp
+        - appdb
+
+    frontend:
+      container_name: frontend
+      build:
+        context: ./frontend 
+      volumes:
+        - ./frontend:/data/app/
+      ports:
+        - "8080:8080"
+      networks:
+        - app-network
+      depends_on:
+        - backend
+      stdin_open: true
+
+networks:
+  app-network:
+    driver: bridge
+  db:
