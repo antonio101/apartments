@@ -39,4 +39,9 @@ sudo docker exec backend /bin/sh -c "php artisan test --coverage-html reports"
 Open in your browser the following file:
 /api/tests/coverage/index.html
 
+# Usage
 
+1. Create a new account with a real email.
+2. Submit a new apartment.
+3. As a guest user, send a booking request for this apartment. The landlord user will receive an email notification.
+4. When the landlord approves a booking request, the apartment will be shown as unavailable.
