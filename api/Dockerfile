@@ -1,7 +1,7 @@
 ########################################################################
 ### Composer
 
-FROM composer:1.10 AS composer
+FROM composer:2.2 AS composer
 
 COPY composer.json /app
 COPY composer.lock /app
@@ -14,7 +14,7 @@ RUN composer install        \
     --no-scripts
 
 COPY . /app/
-RUN composer dump-autoload --optimize --classmap-authoritative
+# RUN composer dump-autoload --optimize --classmap-authoritative
 
 ### Composer
 ########################################################################
@@ -36,7 +36,7 @@ RUN docker-php-ext-configure gd --enable-gd --with-freetype
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
 RUN apk --update --no-cache add autoconf g++ make && \
-    pecl install -f xdebug && \
+    pecl install -f xdebug-2.9.2 && \
     docker-php-ext-enable xdebug && \
     apk del --purge autoconf g++ make
 
